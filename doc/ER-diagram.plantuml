@@ -1,0 +1,49 @@
+@startuml ER-Diagram
+
+title Entity-Relationship model
+
+entity User {
+    * ID: int
+    ---
+    * Username: string
+    * Password hash: string
+}
+
+entity Post {
+    * ID: int
+    ---
+    * Author : ID
+    * Content : string
+}
+
+entity Comment {
+    * ID : int
+    ---
+    * Post : ID
+    * Author : ID
+    * Context : string
+}
+
+entity Event {
+    * ID : int
+    * Type : string
+    ---
+    * Post: ID
+    * Author : ID 
+}
+
+entity Statistics {
+    * Views : []Event
+    * Likes : []Event
+}
+
+User ||--o{ Post : "Creates"
+User ||--o{ Event : "Creates"
+User ||--o{ Comment : "Creates"
+
+Post ||--o{ Comment : "Contains"
+Post ||--o| Statistics : "Associated"
+
+Statistics ||--o{ Event : "Contains"
+
+@enduml
