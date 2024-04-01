@@ -1,0 +1,3 @@
+user_sessions_lifetime: 3600 # time in seconds
+jwt_public_path: "build/example_signature.pub" # absolute path from dir root
+jwt_private_path: "build/example_signature.pem" # absolute path from dir root
