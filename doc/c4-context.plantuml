@@ -1,0 +1,20 @@
+@startuml Context
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Social Network Context Diagram
+
+Person(user, "User", "Social network user")
+
+System_Boundary(socialNetwork, "Social network") {
+    System(mainService, "Main service", "")
+
+    System_Ext(statisticsService, "Statistics service", "Counts likes, views")
+    System_Ext(contentService, "Content service", "Manages posts, comments")
+}
+
+Rel(mainService, statisticsService, "")
+Rel(mainService, contentService, "")
+Rel(user, mainService, "API, Registration, Authentication")
+
+@enduml

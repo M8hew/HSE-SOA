@@ -1,0 +1,46 @@
+@startuml Containers
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+!define logos https://raw.githubusercontent.com/plantuml/plantuml-stdlib/20213c1203fb21723822b8aa77a4fe49d3fc2a87/logos 
+!include logos/go.puml
+!include logos/postgresql.puml
+!include logos/python.puml
+!include logos/kafka.puml
+
+!include clickhouse.sprite
+
+LAYOUT_WITH_LEGEND()
+title Social Network Container Diagram
+
+Person(user, "User", "Social network user")
+
+System_Boundary(mainService, "Main service") {
+    Container(main, "Social Network API", "REST API, Golang", "The main interface that the customer interacts with", $sprite="go")
+    ContainerDb(usersDb, "Users Database", "Postgresql", "Stores user credentials", $sprite="postgresql")
+
+    Rel(main, usersDb, "Reads/Writes")
+}
+
+System_Boundary(contentService, "Content service") {
+    Container(contService, "Internal content service", "Python", "Service working with posts and comments", $sprite="python")
+    ContainerDb(contentDb, "Content Database", "Postgresql", "Stores posts and comments", $sprite="postgresql")
+    
+    Rel(contService, contentDb, "Reads/Writes")
+}
+
+System_Boundary(statisticsService, "Statistics service") {
+    Container(statService, "Internal Statistics service", "Python", "Statistics service for counting likes and views", $sprite="python")
+    ContainerQueue(messageBroker, "MessageBroker", "Kafka", "Stores messages", $sprite="kafka")
+    ContainerDb(interactionsDb, "Interactions Database", "Clickhouse", "Stores likes, views and performs analytics", $sprite="clickhouse_mid")
+
+    Rel_R(statService, messageBroker, "Consume")
+    Rel(statService, interactionsDb, "Reads/Writes")
+}
+
+Rel(user, main, "Uses", "https")
+Rel(main, statService, "Uses", "gRPC")
+Rel(main, contService, "Uses", "gRPC")
+Rel(main, messageBroker, "Produce")
+
+@enduml
