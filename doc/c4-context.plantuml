@@ -7,14 +7,14 @@ title Social Network Context Diagram
 Person(user, "User", "Social network user")
 
 System_Boundary(socialNetwork, "Social network") {
-    System(mainService, "Main service", "")
+    System(userService, "User service", "")
 
     System_Ext(statisticsService, "Statistics service", "Counts likes, views")
     System_Ext(contentService, "Content service", "Manages posts, comments")
 }
 
-Rel(mainService, statisticsService, "")
-Rel(mainService, contentService, "")
-Rel(user, mainService, "API, Registration, Authentication")
+Rel(userService, statisticsService, "")
+Rel(userService, contentService, "")
+Rel(user, userService, "API, Registration, Authentication")
 
 @enduml
