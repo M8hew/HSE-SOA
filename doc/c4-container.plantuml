@@ -15,22 +15,22 @@ title Social Network Container Diagram
 
 Person(user, "User", "Social network user")
 
-System_Boundary(mainService, "Main service") {
-    Container(main, "Social Network API", "REST API, Golang", "The main interface that the customer interacts with", $sprite="go")
+System_Boundary(userService, "User service") {
+    Container(userSrv, "Social Network API", "REST API, Golang", "Provide user interface to singup/login", $sprite="go")
     ContainerDb(usersDb, "Users Database", "Postgresql", "Stores user credentials", $sprite="postgresql")
 
-    Rel(main, usersDb, "Reads/Writes")
+    Rel(userSrv, usersDb, "Reads/Writes")
 }
 
 System_Boundary(contentService, "Content service") {
-    Container(contService, "Internal content service", "Python", "Service working with posts and comments", $sprite="python")
+    Container(contService, "Internal content service", "Golang", "Service working with posts and comments", $sprite="go")
     ContainerDb(contentDb, "Content Database", "Postgresql", "Stores posts and comments", $sprite="postgresql")
     
     Rel(contService, contentDb, "Reads/Writes")
 }
 
 System_Boundary(statisticsService, "Statistics service") {
-    Container(statService, "Internal Statistics service", "Python", "Statistics service for counting likes and views", $sprite="python")
+    Container(statService, "Internal Statistics service", "Golang", "Statistics service for counting likes and views", $sprite="go")
     ContainerQueue(messageBroker, "MessageBroker", "Kafka", "Stores messages", $sprite="kafka")
     ContainerDb(interactionsDb, "Interactions Database", "Clickhouse", "Stores likes, views and performs analytics", $sprite="clickhouse_mid")
 
@@ -38,9 +38,9 @@ System_Boundary(statisticsService, "Statistics service") {
     Rel(statService, interactionsDb, "Reads/Writes")
 }
 
-Rel(user, main, "Uses", "https")
-Rel(main, statService, "Uses", "gRPC")
-Rel(main, contService, "Uses", "gRPC")
-Rel(main, messageBroker, "Produce")
+Rel(user, userSrv, "Uses", "https")
+Rel(userSrv, statService, "Uses", "gRPC")
+Rel(userSrv, contService, "Uses", "gRPC")
+Rel(userSrv, messageBroker, "Produce")
 
 @enduml
