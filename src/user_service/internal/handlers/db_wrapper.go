@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"main_service/api"
 	"os"
+	"user_service/api"
 
 	_ "github.com/lib/pq"
 )

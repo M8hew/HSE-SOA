@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o main ./cmd/main_service
+RUN go build -o main ./cmd/user_service
 
 FROM golang:1.22.0
 

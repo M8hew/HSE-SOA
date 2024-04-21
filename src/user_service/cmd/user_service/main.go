@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"main_service/api"
-	"main_service/internal/handlers"
 	"os"
+	"user_service/api"
+	"user_service/internal/handlers"
 
 	"github.com/labstack/echo/v4"
 )
