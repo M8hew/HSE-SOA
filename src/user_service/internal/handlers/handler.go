@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -106,7 +107,13 @@ func (s *ServerHandler) PostRegister(ctx echo.Context) error {
 // (PUT /update)
 func (s *ServerHandler) PutUpdate(ctx echo.Context) error {
 	log.Println("Put request")
-	tokenString := ctx.Request().Header.Get("Authorization")
+
+	authHeader := ctx.Request().Header.Get("Authorization")
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid authorization header format"})
+	}
+	tokenString := parts[1]
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) { return s.keys.jwtPublic, nil })
 	if err != nil {
