@@ -36,52 +36,55 @@ func NewDBWrapper() (dbWrapper, error) {
 	return dbWrapper{db}, nil
 }
 
-func (w dbWrapper) addNewUser(userLogin string, hashPassword [16]byte) error {
+func (w dbWrapper) addNewUser(userLogin string, hashPassword [16]byte) (id int, err error) {
 	log.Println("db adding new User")
 
 	var count int
-	err := w.QueryRow(
+	err = w.QueryRow(
 		`SELECT COUNT(*) 
 		FROM UserCredentials 
 		WHERE userlogin = $1`,
 		userLogin).Scan(&count)
 	if err != nil {
-		return err
+		return
 	}
 
 	if count > 0 {
-		return errors.New("user already exist")
+		err = errors.New("user already exist")
+		return
 	}
 
-	_, err = w.Exec(
+	err = w.QueryRow(
 		`INSERT INTO UserCredentials 
-		(userlogin, userpassword) VALUES ($1, $2)`,
-		userLogin, hashPassword[:])
-	return err
+		(userlogin, userpassword) VALUES ($1, $2) 
+		RETURNING id`,
+		userLogin, hashPassword[:]).Scan(&id)
+	return
 }
 
-func (w dbWrapper) getUserPassword(userLogin string) ([]byte, error) {
+func (w dbWrapper) getUserPasswordId(userLogin string) ([]byte, int, error) {
 	log.Println("db getting user password")
+	var id int
 	password := make([]byte, 16)
 	err := w.QueryRow(
-		`SELECT userpassword 
+		`SELECT userpassword, id 
 		FROM UserCredentials 
 		WHERE userlogin = $1`,
-		userLogin).Scan(&password)
+		userLogin).Scan(&password, &id)
 
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, id, err
 	}
-	return password, nil
+	return password, id, nil
 }
 
-func (w dbWrapper) updateUser(userLogin string, userData api.PutUpdateJSONRequestBody) error {
+func (w dbWrapper) updateUser(userId int, userData api.PutUpdateJSONRequestBody) error {
 	log.Println("db updateUser")
 
 	query, err := w.Prepare(`
-	INSERT INTO UserProfile (userlogin, birthdate, email, first_name, second_name, phone_number)
+	INSERT INTO UserProfile (id, birthdate, email, first_name, second_name, phone_number)
 	VALUES ($1, $2, $3, $4, $5, $6)
-	ON CONFLICT (userlogin)
+	ON CONFLICT (id)
 	DO UPDATE SET
 		birthdate = COALESCE(EXCLUDED.birthdate, UserProfile.birthdate),
 		email = COALESCE(EXCLUDED.email, UserProfile.email),
@@ -93,7 +96,7 @@ func (w dbWrapper) updateUser(userLogin string, userData api.PutUpdateJSONReques
 	}
 	defer query.Close()
 
-	_, err = query.Exec(userLogin, userData.DateOfBirth.Time, userData.Email, userData.Name,
+	_, err = query.Exec(userId, userData.DateOfBirth.Time, userData.Email, userData.Name,
 		userData.Surname, userData.PhoneNumber)
 	return err
 }

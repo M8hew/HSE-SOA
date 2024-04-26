@@ -24,7 +24,6 @@ type dbWrapper struct {
 func NewDBWrapper() (dbWrapper, error) {
 	username := os.Getenv("CONTENT_DB_USER")
 	password := os.Getenv("CONTENT_DB_PASSWORD")
-	// port := os.Getenv("CONTENT_DB_PORT")
 	dbname := os.Getenv("CONTENT_DB")
 
 	dsn := fmt.Sprintf("host=postgres user=%s password=%s dbname=%s sslmode=disable", username, password, dbname)

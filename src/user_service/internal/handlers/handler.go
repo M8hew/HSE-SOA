@@ -37,7 +37,7 @@ func (s *ServerHandler) PostLogin(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
 	}
 
-	userPassword, err := s.db.getUserPassword(*loginRequest.Username)
+	userPassword, id, err := s.db.getUserPasswordId(*loginRequest.Username)
 	if err != nil {
 		log.Println(err.Error())
 		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": "User not found"})
@@ -49,9 +49,9 @@ func (s *ServerHandler) PostLogin(ctx echo.Context) error {
 
 	expirationDate := time.Now().Add(s.userSessionLifeTime)
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-		"username": loginRequest.Username,
-		"nbf":      time.Now().Unix(),
-		"exp":      expirationDate.Unix(),
+		"user_id": id,
+		"nbf":     time.Now().Unix(),
+		"exp":     expirationDate.Unix(),
 	})
 
 	tokenString, err := token.SignedString(s.keys.jwtPrivate)
@@ -78,16 +78,17 @@ func (s *ServerHandler) PostRegister(ctx echo.Context) error {
 	}
 
 	hPassword := hashPassword(*registerRequest.Password, *registerRequest.Username)
-	if err := s.db.addNewUser(*registerRequest.Username, hPassword); err != nil {
+	id, err := s.db.addNewUser(*registerRequest.Username, hPassword)
+	if err != nil {
 		log.Println(err.Error())
 		return ctx.JSON(http.StatusConflict, map[string]string{"error": "User already exists"})
 	}
 
 	expirationDate := time.Now().Add(s.userSessionLifeTime)
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-		"username": registerRequest.Username,
-		"nbf":      time.Now().Unix(),
-		"exp":      expirationDate.Unix(),
+		"user_id": id,
+		"nbf":     time.Now().Unix(),
+		"exp":     expirationDate.Unix(),
 	})
 
 	tokenString, err := token.SignedString(s.keys.jwtPrivate)
@@ -141,9 +142,9 @@ func (s *ServerHandler) PutUpdate(ctx echo.Context) error {
 		return ctx.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized, invalid or expired token"})
 	}
 
-	username, ok := claims["username"].(string)
+	userId, ok := claims["user_id"].(float64)
 	if !ok {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid claims in token"})
+		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user claims in token"})
 	}
 
 	updateRequest := api.PutUpdateJSONRequestBody{}
@@ -152,7 +153,7 @@ func (s *ServerHandler) PutUpdate(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
 	}
 
-	if err = s.db.updateUser(username, updateRequest); err != nil {
+	if err = s.db.updateUser(int(userId), updateRequest); err != nil {
 		log.Println(err.Error())
 		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
 	}
