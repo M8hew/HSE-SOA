@@ -16,11 +16,11 @@ type dbWrapper struct {
 }
 
 func NewDBWrapper() (dbWrapper, error) {
-	username := os.Getenv("POSTGRES_USER")
-	password := os.Getenv("POSTGRES_PASSWORD")
+	username := os.Getenv("USER_DB_USER")
+	password := os.Getenv("USER_DB_PASSWORD")
 	host := "postgres"
-	port := os.Getenv("DB_PORT")
-	dbname := os.Getenv("POSTGRES_DB")
+	port := os.Getenv("USER_DB_PORT")
+	dbname := os.Getenv("USER_DB")
 
 	dbAddress := fmt.Sprintf("postgres://%s:%s@%s:%v/%s?sslmode=disable", username, password, host, port, dbname)
 	db, err := sql.Open("postgres", dbAddress)

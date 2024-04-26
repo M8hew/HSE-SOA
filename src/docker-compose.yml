@@ -13,7 +13,7 @@ services:
     volumes:
       - ./user_service/build:/docker-entrypoint-initdb.d
     ports:
-      - ${USER_DB_PORT}:${USER_DB_PORT}
+      - ${USER_DB_PORT}:5432
 
   user_service:
     restart: unless-stopped
@@ -35,3 +35,32 @@ services:
       - user_database
     ports:
       - ${USER_SERVICE_PORT}:${USER_SERVICE_PORT}
+
+  content_database:
+    image: postgres:16.2
+    container_name: content_database
+    restart: always
+    hostname: postgres
+    environment:
+      POSTGRES_PASSWORD: ${CONTENT_DB_PASSWORD}
+      POSTGRES_DB: ${CONTENT_DB}
+      POSTGRES_USER: ${CONTENT_DB_USER}
+    volumes:
+      - ./content_serive/build:/docker-entrypoint-initdb.d
+    ports:
+      - ${CONTENT_DB_PORT}:5432
+
+  content_service:
+    restart: unless-stopped
+    build:
+      context: ./content_service/
+      dockerfile: build/Dockerfile
+    env_file:
+      - .env
+    command: [ "./main", "--port", "$CONTENT_SERVICE_PORT" ]
+    container_name: content_service
+    depends_on:
+      - content_database
+      - user_service
+    ports:
+      - ${CONTENT_SERVICE_PORT}:${CONTENT_SERVICE_PORT}
