@@ -19,7 +19,7 @@ service ContentService {
 }
 
 message CreatePostRequest {
-    string author = 1;
+    int32 author = 1;
     string content = 2;
 }
 
@@ -29,18 +29,18 @@ message CreatePostResponse {
 
 message UpdatePostRequest {
     uint64 id = 1;
-    string author = 2;
+    int32 author = 2;
     string content = 3;
 }
 
 message DeletePostRequest {
     uint64 id = 1;
-    string author = 2;
+    int32 author = 2;
 }
 
 message GetPostRequest {
     uint64 id = 1;
-    string author = 2;
+    int32 author = 2;
 }
 
 message GetPostResponse {
@@ -52,7 +52,7 @@ message GetPostResponse {
 message ListPostsRequest {
     int32 offset = 1;
     int32 max_cnt = 2;
-    string author = 3;
+    int32 author = 3;
 }
 
 message ListPostsResponse {
@@ -62,6 +62,6 @@ message ListPostsResponse {
 
 message Post {
     uint64 id = 1;
-    string author = 2;
+    int32 author = 2;
     string content = 3;
 }

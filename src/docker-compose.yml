@@ -35,6 +35,7 @@ services:
       - user_database
     ports:
       - ${USER_SERVICE_PORT}:${USER_SERVICE_PORT}
+
   content_database:
     image: postgres:16.2
     container_name: content_database
@@ -45,7 +46,7 @@ services:
       POSTGRES_DB: ${CONTENT_DB}
       POSTGRES_USER: ${CONTENT_DB_USER}
     volumes:
-      - ./content_serive/build:/docker-entrypoint-initdb.d
+      - ./content_service/build:/docker-entrypoint-initdb.d
     ports:
       - ${CONTENT_DB_PORT}:5432
 

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"crypto/md5"
+	"fmt"
 	"log"
 	"net/http"
 	"slices"
@@ -12,12 +13,16 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"user_service/api"
+	pb "user_service/api/proto"
 )
+
+var ErrAuth = fmt.Errorf("authorization error")
 
 type ServerHandler struct {
 	db                  dbWrapper
 	keys                rsaKeys
 	userSessionLifeTime time.Duration
+	contentService      pb.ContentServiceClient
 }
 
 func hashPassword(password, salt string) (passwordHash [16]byte) {
@@ -25,6 +30,75 @@ func hashPassword(password, salt string) (passwordHash [16]byte) {
 	hash.Write([]byte(password + salt))
 	copy(passwordHash[:], hash.Sum(nil)[:16])
 	return
+}
+
+func checkAuth(ctx echo.Context, keys rsaKeys) (id int, err error) {
+	authHeader := ctx.Request().Header.Get("Authorization")
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		err = ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid authorization header format"})
+		if err == nil {
+			err = ErrAuth
+		}
+		return
+	}
+	tokenString := parts[1]
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) { return keys.jwtPublic, nil })
+	if err != nil {
+		log.Println(err.Error())
+		err = ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Error parsing token"})
+		if err == nil {
+			err = ErrAuth
+		}
+		return
+	}
+
+	if !token.Valid {
+		err = ctx.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized, invalid or expired token"})
+		if err == nil {
+			err = ErrAuth
+		}
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		err = ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid claims in token"})
+		if err == nil {
+			err = ErrAuth
+		}
+		return
+	}
+
+	log.Println(claims)
+
+	expTime, err := claims.GetExpirationTime()
+	if err != nil || expTime == nil {
+		err = ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Error parsing exp field"})
+		if err == nil {
+			err = ErrAuth
+		}
+		return
+	}
+
+	if !ok || time.Now().After(expTime.Time) {
+		err = ctx.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized, invalid or expired token"})
+		if err == nil {
+			err = ErrAuth
+		}
+		return
+	}
+
+	userId, ok := claims["user_id"].(float64)
+	if !ok {
+		err = ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user claims in token"})
+		if err == nil {
+			err = ErrAuth
+		}
+		return
+	}
+	return int(userId), nil
 }
 
 // User login
@@ -109,42 +183,9 @@ func (s *ServerHandler) PostRegister(ctx echo.Context) error {
 func (s *ServerHandler) PutUpdate(ctx echo.Context) error {
 	log.Println("Put request")
 
-	authHeader := ctx.Request().Header.Get("Authorization")
-	parts := strings.SplitN(authHeader, " ", 2)
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid authorization header format"})
-	}
-	tokenString := parts[1]
-
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) { return s.keys.jwtPublic, nil })
+	userId, err := checkAuth(ctx, s.keys)
 	if err != nil {
-		log.Println(err.Error())
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Error parsing token"})
-	}
-
-	if !token.Valid {
-		return ctx.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized, invalid or expired token"})
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid claims in token"})
-	}
-
-	log.Println(claims)
-
-	expTime, err := claims.GetExpirationTime()
-	if err != nil || expTime == nil {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Error parsing exp field"})
-	}
-
-	if !ok || time.Now().After(expTime.Time) {
-		return ctx.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized, invalid or expired token"})
-	}
-
-	userId, ok := claims["user_id"].(float64)
-	if !ok {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user claims in token"})
+		return err
 	}
 
 	updateRequest := api.PutUpdateJSONRequestBody{}

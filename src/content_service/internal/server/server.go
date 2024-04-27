@@ -4,6 +4,7 @@ import (
 	pb "content_service/proto"
 	"context"
 	"fmt"
+	"log"
 	"net"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -20,6 +21,8 @@ func NewServer() *Server {
 	if err != nil {
 		return nil
 	}
+
+	log.Println("Db instance successfully created")
 	return &Server{dbWrapper: db}
 }
 
@@ -68,7 +71,7 @@ func (s *Server) DeletePost(ctx context.Context, in *pb.DeletePostRequest) (*emp
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	default:
-		return nil, s.dbWrapper.DeletePost(&in.Author, uint(in.Id))
+		return nil, s.dbWrapper.DeletePost(in.Author, uint(in.Id))
 	}
 }
 

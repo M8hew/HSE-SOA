@@ -36,6 +36,17 @@ func NewDBWrapper() (dbWrapper, error) {
 	return dbWrapper{db}, nil
 }
 
+func (w dbWrapper) getUserLogin(userID int) (login string, err error) {
+	log.Printf("get user login by id: %d\n", userID)
+
+	err = w.QueryRow(
+		`SELECT userlogin 
+		FROM UserCredentials 
+		WHERE id = $1`,
+		userID).Scan(&login)
+	return
+}
+
 func (w dbWrapper) addNewUser(userLogin string, hashPassword [16]byte) (id int, err error) {
 	log.Println("db adding new User")
 
@@ -59,6 +70,7 @@ func (w dbWrapper) addNewUser(userLogin string, hashPassword [16]byte) (id int, 
 		(userlogin, userpassword) VALUES ($1, $2) 
 		RETURNING id`,
 		userLogin, hashPassword[:]).Scan(&id)
+	log.Printf("New user id: %d\n", id)
 	return
 }
 

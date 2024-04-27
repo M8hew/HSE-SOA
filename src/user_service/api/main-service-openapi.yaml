@@ -76,6 +76,135 @@ paths:
         '401':
           description: Unauthorized, invalid or expired token
 
+  /posts:
+    post:
+      summary: Create new post
+      security:
+        - bearerAuth: [] 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+      responses:
+        '201':
+          description: Post created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+        '401':
+          description: Unauthorized, invalid or expired token
+
+    get:
+      summary: Retrieve list of posts with pagination
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: first_id
+          schema:
+            type: integer
+          required: true
+          description: ID of the first post needed
+        - in: query
+          name: max_posts
+          schema:
+            type: integer
+          required: true
+          description: Maximum number of posts to retrieve
+      responses:
+        '200':
+          description: List of posts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+
+
+  /posts/{post_id}:
+    get:
+      summary: Retrieve a post by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: post_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the post to retrieve
+      responses:
+        '200':
+          description: Post retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '401':
+          description: Unauthorized, invalid or expired token
+        '404':
+          description: Post not found
+
+    put:
+      summary: Update post
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: post_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the post to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+      responses:
+        '200':
+          description: Post updated successfully
+        '401':
+          description: Unauthorized, invalid or expired token
+        '404':
+          description: Post not found
+    delete:
+      summary: Delete post
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: post_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the post to delete
+      responses:
+        '204':
+          description: Post deleted successfully
+        '401':
+          description: Unauthorized, invalid or expired token
+        '404':
+          description: Post not found
+
 components:
   responses:
     AuthSuccess:
@@ -90,6 +219,18 @@ components:
               expiration_date:
                 type: string
                 format: date-time
+
+  schemas:
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        author:
+          type: string
+        content:
+          type: string
 
   securitySchemes:
     bearerAuth:
