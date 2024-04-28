@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	ErrNotFound                = errors.New("Object not found in database")
-	ErrCreatingPost            = errors.New("Error creating post")
+	ErrNotFound                = errors.New("object not found in database")
+	ErrCreatingPost            = errors.New("error creating post")
 	ErrInsufficientPermissions = errors.New("insufficient access rights")
 )
 
@@ -44,7 +44,7 @@ func NewDBWrapper() (dbWrapper, error) {
 	return dbWrapper{db}, nil
 }
 
-func (db *dbWrapper) GetPostObj(id uint, author int32) (*PostIntRep, error) {
+func (db *dbWrapper) GetPostObj(id uint) (*PostIntRep, error) {
 	log.Println("GetPostObj query")
 
 	post := PostIntRep{Model: gorm.Model{ID: id}}
@@ -55,9 +55,6 @@ func (db *dbWrapper) GetPostObj(id uint, author int32) (*PostIntRep, error) {
 
 	if result.Error != nil {
 		return nil, result.Error
-	}
-	if post.Author != author {
-		return nil, ErrInsufficientPermissions
 	}
 	return &post, nil
 }
@@ -76,9 +73,12 @@ func (db *dbWrapper) UpdatePost(post *PostIntRep, id uint) error {
 	log.Println("UpdatePost query")
 
 	// Check access rights
-	_, err := db.GetPostObj(id, post.Author)
+	postObj, err := db.GetPostObj(id)
 	if err != nil {
 		return err
+	}
+	if postObj.Author != post.Author {
+		return ErrInsufficientPermissions
 	}
 	// update query
 	result := db.Model(&PostIntRep{}).Where("ID = ?", id).Updates(PostIntRep{
@@ -92,17 +92,20 @@ func (db *dbWrapper) DeletePost(postAuthor int32, id uint) error {
 	log.Println("DeletePost query")
 
 	// Chech access rights
-	_, err := db.GetPostObj(id, postAuthor)
+	postObj, err := db.GetPostObj(id)
 	if err != nil {
 		return err
+	}
+	if postObj.Author != postAuthor {
+		return ErrInsufficientPermissions
 	}
 	return db.Delete(&PostIntRep{}, id).Error
 }
 
-func (db *dbWrapper) GetPosts(offset int, batchSize int, author int32) ([]PostIntRep, error) {
+func (db *dbWrapper) GetPosts(offset int, batchSize int) ([]PostIntRep, error) {
 	log.Println("GetPosts query")
 
 	var posts []PostIntRep
-	result := db.Where("author = ?", author).Limit(int(batchSize)).Find(&posts)
+	result := db.Where("id >= ?", offset).Limit(int(batchSize)).Find(&posts)
 	return posts, result.Error
 }
