@@ -112,11 +112,17 @@ func NewServerHandler(configPath string) (*ServerHandler, error) {
 		return nil, err
 	}
 
+	kafkaProd, err := setKafkaUp()
+	if err != nil {
+		return nil, err
+	}
+
 	serverHandler := ServerHandler{
 		userSessionLifeTime: time.Duration(secSessionLifetime) * time.Second,
 		keys:                keys,
 		db:                  dbWrapper_,
 		contentService:      *client,
+		kafkaProducer:       kafkaProd,
 	}
 	return &serverHandler, nil
 }

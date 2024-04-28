@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 
@@ -23,6 +24,7 @@ type ServerHandler struct {
 	keys                rsaKeys
 	userSessionLifeTime time.Duration
 	contentService      pb.ContentServiceClient
+	kafkaProducer       *kafka.Producer
 }
 
 func hashPassword(password, salt string) (passwordHash [16]byte) {

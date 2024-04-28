@@ -1,6 +1,65 @@
 version: '3.8'
 
 services:
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:${KAFKA_BOOTSTRAP_PORT},PLAINTEXT_HOST://localhost:${KAFKA_PORT}'
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:${KAFKA_BOOTSTRAP_PORT},CONTROLLER://kafka:${KAFKA_CONTROLER_PORT},PLAINTEXT_HOST://0.0.0.0:${KAFKA_PORT}'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:${KAFKA_CONTROLER_PORT}'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+      KAFKA_JMX_PORT: 9997
+      KAFKA_LOG4J_ROOT_LOGLEVEL: 'WARN'
+      KAFKA_LOG4J_LOGGERS: 'kafka=WARN,kafka.controller=WARN,kafka.log.LogCleaner=WARN,state.change.logger=WARN,kafka.producer.async.DefaultEventHandler=WARN'
+    ports:
+      - "${KAFKA_PORT}:${KAFKA_PORT}"
+
+  kafka-ui:
+    container_name: "kafka-ui"
+    image: provectuslabs/kafka-ui
+    restart: unless-stopped
+    environment:
+      KAFKA_CLUSTERS_0_NAME: 'local'
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: 'kafka:${KAFKA_BOOTSTRAP_PORT}'
+      KAFKA_CLUSTERS_0_METRICS_PORT: ${KAFKA_METRICS_PORT}
+      DYNAMIC_CONFIG_ENABLED: 'true'
+      LOGGING_LEVEL_COM_PROVECTUS: 'INFO'
+    depends_on:
+      - kafka
+    ports:
+      - "8000:8080"
+
+  stat_service_database:
+    image: yandex/clickhouse-server:latest
+    container_name: clickhouse
+    ports:
+      - "${STAT_DB_PORT}:${STAT_DB_PORT}" # native TCP interface
+    volumes:
+      - ./stat_service/build:/docker-entrypoint-initdb.d
+    depends_on:
+      - kafka
+
+  stat_service:
+    container_name: stat_service
+    restart: unless-stopped
+    command: [ "./main", "--port", "$STAT_SERVICE_PORT" ]
+    build:
+      context: ./stat_service/
+      dockerfile: build/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - stat_service_database
+    ports:
+      - ${STAT_SERVICE_PORT}:${STAT_SERVICE_PORT}
+
   user_database:
     image: postgres:16.2
     container_name: user_database
@@ -33,6 +92,8 @@ services:
     container_name: user_service
     depends_on:
       - user_database
+      - content_service
+      - kafka
     ports:
       - ${USER_SERVICE_PORT}:${USER_SERVICE_PORT}
 
@@ -61,6 +122,5 @@ services:
     container_name: content_service
     depends_on:
       - content_database
-      - user_service
     ports:
       - ${CONTENT_SERVICE_PORT}:${CONTENT_SERVICE_PORT}

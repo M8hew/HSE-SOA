@@ -3,5 +3,5 @@ go 1.22.0
 use (
 	./content_service
 	./user_service
-    ./stat_service
+	./stat_service
 )

@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: User Service API
-  version: 1.0.0
+  version: 1.0.1
   description: API for user authentication and authorization
 
 paths:
@@ -204,6 +204,37 @@ paths:
           description: Unauthorized, invalid or expired token
         '404':
           description: Post not found
+
+  /posts/{post_id}/view:
+    post:
+      summary: Send a post view
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: post_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: View successfully recorded
+  /posts/{post_id}/like:
+    post:
+      summary: Send a post like
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: post_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Like successfully recorded
 
 components:
   responses:
