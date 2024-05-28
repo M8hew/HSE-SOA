@@ -171,3 +171,26 @@ Before you start using the project, make sure you have completed the following s
 -H "Authorization: Bearer <your_token>" \
 -H "Content-Type: application/json"
 ```
+
+### Geting stats
+
+#### Get Total Number of Views and Likes per Post
+
+```bash
+>curl -X GET "http://localhost:8080/posts/{post_id}/stats" \
+-H "accept: application/json"
+```
+
+#### Get a List of Top 5 Posts by Number of Likes or Views
+
+```bash
+>curl -X GET "http://localhost:8080/posts/top?sortBy={likes, views}" \
+-H "accept: application/json"
+```
+
+#### Get a List of Top 3 Users with the Highest Number of Likes Total
+
+```bash
+>curl -X GET "http://localhost:8080/users/top" \
+-H "accept: application/json"
+```

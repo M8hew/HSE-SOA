@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"crypto/rsa"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -64,14 +65,34 @@ func parseJWTKeys(jwtPublicPath, jwtPrivatePath string) (rsaKeys, error) {
 	}, nil
 }
 
-func connectGRPCServer() (*pb.ContentServiceClient, error) {
+func connectContentService() (*pb.ContentServiceClient, error) {
 	contentServicePort := os.Getenv("CONTENT_SERVICE_PORT")
-	conn, err := grpc.Dial("content_service:"+contentServicePort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if contentServicePort == "" {
+		return nil, errors.New("content service grpc port unknown")
+	}
+
+	conn, err := grpc.NewClient("content_service:"+contentServicePort, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}
 
 	client := pb.NewContentServiceClient(conn)
+	return &client, nil
+}
+
+func connectStatService() (*pb.StatServiceClient, error) {
+	statServicePort := os.Getenv("STAT_SERVICE_RPC_PORT")
+	if statServicePort == "" {
+		return nil, errors.New("stat service grpc port unknown")
+	}
+
+	serverAddr := "stat_service:" + statServicePort
+	conn, err := grpc.NewClient(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+
+	client := pb.NewStatServiceClient(conn)
 	return &client, nil
 }
 
@@ -107,7 +128,12 @@ func NewServerHandler(configPath string) (*ServerHandler, error) {
 		return nil, err
 	}
 
-	client, err := connectGRPCServer()
+	contentClient, err := connectContentService()
+	if err != nil {
+		return nil, err
+	}
+
+	statClient, err := connectStatService()
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +147,8 @@ func NewServerHandler(configPath string) (*ServerHandler, error) {
 		userSessionLifeTime: time.Duration(secSessionLifetime) * time.Second,
 		keys:                keys,
 		db:                  dbWrapper_,
-		contentService:      *client,
+		contentService:      *contentClient,
+		statService:         *statClient,
 		kafkaProducer:       kafkaProd,
 	}
 	return &serverHandler, nil
