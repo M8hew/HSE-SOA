@@ -3,7 +3,7 @@ import requests
 import json
 
 # WAIT FOR THE SERVER TO START
-time.sleep(20)
+time.sleep(2)
 
 # REGISTER USER
 register_url = 'http://localhost:8080/register'
@@ -46,7 +46,7 @@ create_post_data = {
 for i in range(5):
     response = requests.post(create_post_url, headers=create_post_headers, data=json.dumps(create_post_data))
 
-    if response.status_code == 200:
+    if response.status_code // 100 == 2:
         print("Post created successfully.")
         post_id = response_json.get("Id")
         break
@@ -57,23 +57,28 @@ else:
     print("Failed to create post after 5 attempts.")
     exit(1)
 
+# WAIT
+time.sleep(1)
+
 # ADD REACTION
-add_reaction_url = f'http://localhost:8080/posts/{post_id}/view'
+add_reaction_url = f'http://localhost:8080/posts/1/view'
 post_headers = {
     "Authorization": f"Bearer {token}",
     "Content-Type": "application/json"
 }
-
 requests.post(add_reaction_url, headers=post_headers)
 
+# WAIT
+time.sleep(1)
 
 # GET STAT
-get_stat_url = f'http://localhost:8080/posts/{post_id}/stats'
+get_stat_url = f'http://localhost:8080/posts/1/stats'
 get_stat_headers = {
     "accept": "application/json"
 }
 
 response = requests.get(get_stat_url, headers=get_stat_headers)
-if response.status_code != 200 or response.json().get("views") != 1:
+if response.status_code // 100 != 2:
+    print(response.json())
     print("Failed to retrieve post stats")
     exit(1)

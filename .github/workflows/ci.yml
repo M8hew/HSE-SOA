@@ -1,10 +1,7 @@
 name: Integration tests
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  [push, pull_request]
 
 jobs:
   integration-test:
@@ -31,6 +28,7 @@ jobs:
 
       - name: Start Docker Compose services
         run: |
+          cd src
           docker-compose up -d
 
       - name: Set up Python
@@ -45,10 +43,17 @@ jobs:
   
       - name: Run Python script
         run: |
-          python test.py
-      
+          python test/test.py
+
+      - name: Run unit tests
+        run: |
+          docker exec user_service /bin/bash -c "go test -v ./..."
+          docker exec content_service /bin/bash -c "go test -v ./..."
+          docker exec stat_service /bin/bash -c "go test -v ./..."
+
       - name: Stop Docker Compose services
         run: |
+          cd src
           docker-compose down
 
 
