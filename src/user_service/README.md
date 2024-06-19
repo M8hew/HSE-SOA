@@ -1,3 +1,5 @@
+# User Service
+
 ## Getting Started
 
 Before you start using the project, make sure you have completed the following steps:
@@ -38,7 +40,9 @@ Before you start using the project, make sure you have completed the following s
 
 ## Request examples
 
-### Register
+### User Section
+
+#### Register
 
 ```bash
 > curl -X POST http://localhost:8080/register \
@@ -54,7 +58,7 @@ Before you start using the project, make sure you have completed the following s
 }
 ```
 
-### Login
+#### Login
 
 ```bash
 > curl -X POST http://localhost:8080/login \
@@ -70,7 +74,7 @@ Before you start using the project, make sure you have completed the following s
 }
 ```
 
-### Update
+#### Update
 
 ```bash
 >curl -X PUT http://localhost:8080/update \
@@ -87,4 +91,65 @@ Before you start using the project, make sure you have completed the following s
 {
     "message":"User data updated successfully"
 }
+```
+
+### Post Section
+
+#### Create
+
+```bash
+>curl -X POST "http://localhost:8080/posts" \
+-H "Authorization: Bearer <your_token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "content": "This is a new post."
+}'
+
+{
+  "Id":1
+}
+```
+
+#### Update
+
+```bash
+>curl -X PUT "http://localhost:8080/posts/{post_id}" \
+-H "Authorization: Bearer <your_token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "content": "Updated post content."
+}'
+
+{
+  "message":"Post updated successfully"
+}
+```
+
+#### Delete
+
+```bash
+>curl -X DELETE "http://localhost:8080/posts/{post_id}" \
+-H "Authorization: Bearer <your_token>"
+
+{
+  "message": "Post deleted successfully"
+}
+```
+
+#### Retrive by ID
+
+```bash
+>curl -X GET "http://localhost:8080/posts/{post_id}" \
+-H "Authorization: Bearer <your_token>"
+
+{"author":"example_user","content":"example_content","id":1}
+```
+
+#### Retrieve list of posts with pagination
+
+```bash
+>curl -X GET "http://localhost:8080/posts?first_id=1&max_posts=10" \
+-H "Authorization: Bearer <your_token>"
+
+[{"author":"example_user","content":"example_content_1","id":1},{"author":"example_user","content":"example_content_3","id":3},{"author":"example_user","content":"example_content_5","id":5}]
 ```

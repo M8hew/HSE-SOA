@@ -7,7 +7,11 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"gopkg.in/yaml.v3"
+
+	pb "user_service/api/proto"
 )
 
 type rsaKeys struct {
@@ -60,6 +64,17 @@ func parseJWTKeys(jwtPublicPath, jwtPrivatePath string) (rsaKeys, error) {
 	}, nil
 }
 
+func connectGRPCServer() (*pb.ContentServiceClient, error) {
+	contentServicePort := os.Getenv("CONTENT_SERVICE_PORT")
+	conn, err := grpc.Dial("content_service:"+contentServicePort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+
+	client := pb.NewContentServiceClient(conn)
+	return &client, nil
+}
+
 func NewServerHandler(configPath string) (*ServerHandler, error) {
 	configMap, err := parseYAMLConfig(configPath)
 	if err != nil {
@@ -92,10 +107,16 @@ func NewServerHandler(configPath string) (*ServerHandler, error) {
 		return nil, err
 	}
 
+	client, err := connectGRPCServer()
+	if err != nil {
+		return nil, err
+	}
+
 	serverHandler := ServerHandler{
 		userSessionLifeTime: time.Duration(secSessionLifetime) * time.Second,
 		keys:                keys,
 		db:                  dbWrapper_,
+		contentService:      *client,
 	}
 	return &serverHandler, nil
 }
