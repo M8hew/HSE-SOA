@@ -105,6 +105,12 @@ type ServerInterface interface {
 	// Update post
 	// (PUT /posts/{post_id})
 	PutPostsPostId(ctx echo.Context, postId int64) error
+	// Send a post like
+	// (POST /posts/{post_id}/like)
+	PostPostsPostIdLike(ctx echo.Context, postId int64) error
+	// Send a post view
+	// (POST /posts/{post_id}/view)
+	PostPostsPostIdView(ctx echo.Context, postId int64) error
 	// Register a new user
 	// (POST /register)
 	PostRegister(ctx echo.Context) error
@@ -219,6 +225,42 @@ func (w *ServerInterfaceWrapper) PutPostsPostId(ctx echo.Context) error {
 	return err
 }
 
+// PostPostsPostIdLike converts echo context to params.
+func (w *ServerInterfaceWrapper) PostPostsPostIdLike(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "post_id" -------------
+	var postId int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "post_id", ctx.Param("post_id"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter post_id: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostPostsPostIdLike(ctx, postId)
+	return err
+}
+
+// PostPostsPostIdView converts echo context to params.
+func (w *ServerInterfaceWrapper) PostPostsPostIdView(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "post_id" -------------
+	var postId int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "post_id", ctx.Param("post_id"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter post_id: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostPostsPostIdView(ctx, postId)
+	return err
+}
+
 // PostRegister converts echo context to params.
 func (w *ServerInterfaceWrapper) PostRegister(ctx echo.Context) error {
 	var err error
@@ -273,6 +315,8 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.DELETE(baseURL+"/posts/:post_id", wrapper.DeletePostsPostId)
 	router.GET(baseURL+"/posts/:post_id", wrapper.GetPostsPostId)
 	router.PUT(baseURL+"/posts/:post_id", wrapper.PutPostsPostId)
+	router.POST(baseURL+"/posts/:post_id/like", wrapper.PostPostsPostIdLike)
+	router.POST(baseURL+"/posts/:post_id/view", wrapper.PostPostsPostIdView)
 	router.POST(baseURL+"/register", wrapper.PostRegister)
 	router.PUT(baseURL+"/update", wrapper.PutUpdate)
 

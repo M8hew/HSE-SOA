@@ -80,7 +80,7 @@ func (s *Server) GetPost(ctx context.Context, in *pb.GetPostRequest) (*pb.Post, 
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	default:
-		obj, err := s.dbWrapper.GetPostObj(uint(in.Id), in.Author)
+		obj, err := s.dbWrapper.GetPostObj(uint(in.Id))
 		if err != nil {
 			return nil, err
 		}
@@ -97,7 +97,7 @@ func (s *Server) ListPosts(ctx context.Context, in *pb.ListPostsRequest) (*pb.Li
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	default:
-		objList, err := s.dbWrapper.GetPosts(int(in.Offset), int(in.MaxCnt), in.Author)
+		objList, err := s.dbWrapper.GetPosts(int(in.Offset), int(in.MaxCnt))
 		if err != nil {
 			return nil, err
 		}

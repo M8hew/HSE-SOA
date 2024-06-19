@@ -34,8 +34,8 @@ System_Boundary(statisticsService, "Statistics service") {
     ContainerQueue(messageBroker, "MessageBroker", "Kafka", "Stores messages", $sprite="kafka")
     ContainerDb(interactionsDb, "Interactions Database", "Clickhouse", "Stores likes, views and performs analytics", $sprite="clickhouse_mid")
 
-    Rel_R(statService, messageBroker, "Consume")
-    Rel(statService, interactionsDb, "Reads/Writes")
+    Rel_R(interactionsDb, messageBroker, "Consume")
+    Rel(statService, interactionsDb, "Reads")
 }
 
 Rel(user, userSrv, "Uses", "https")

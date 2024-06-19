@@ -153,3 +153,21 @@ Before you start using the project, make sure you have completed the following s
 
 [{"author":"example_user","content":"example_content_1","id":1},{"author":"example_user","content":"example_content_3","id":3},{"author":"example_user","content":"example_content_5","id":5}]
 ```
+
+### Engagment Section
+
+#### Send a post view
+
+```bash
+>curl -X POST "http://localhost:8080/posts/{post_id}/view" \
+-H "Authorization: Bearer <your_token>" \
+-H "Content-Type: application/json"
+```
+
+#### Send a post like
+
+```bash
+>curl -X POST "http://localhost:8080/posts/{post_id}/like" \
+-H "Authorization: Bearer <your_token>" \
+-H "Content-Type: application/json"
+```

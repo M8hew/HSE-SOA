@@ -2,8 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"os"
+	"log"
 	"user_service/api"
 	"user_service/internal/handlers"
 
@@ -19,8 +18,7 @@ func main() {
 
 	serverHandler, err := handlers.NewServerHandler(*configPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error starting the server: %v", err)
-		os.Exit(1)
+		log.Fatalf("Error starting the server: %v", err)
 	}
 	api.RegisterHandlers(e, serverHandler)
 
