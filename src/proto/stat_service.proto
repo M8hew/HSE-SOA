@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package stats;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "proto/";
+
+service StatService {
+    rpc GetViewsLikes(GetViewsLikesRequest) returns (GetViewsLikesResponse);
+
+    rpc GetTopPosts(GetTopPostsRequest) returns (GetTopPostsResponse);
+
+    rpc GetTopUsers(google.protobuf.Empty) returns (GetTopUsersResponse);
+}
+
+message GetViewsLikesRequest {
+    uint64 id = 1;
+}
+
+message GetViewsLikesResponse {
+    int64 views = 1;
+    int64 likes = 2;
+}
+
+message GetTopPostsRequest {
+    enum SortBy {
+        VIEWS = 0;
+        LIKES = 1;
+    }
+    SortBy sort_by = 1;
+}
+
+message GetTopPostsResponse {
+    message Post {
+        uint64 id = 1;
+        int32 post_author = 2;
+        int64 views = 3;
+        int64 likes = 4;
+    }
+    repeated Post posts = 1;
+}
+
+message GetTopUsersResponse {
+    message UserStat {
+        int32 user_id = 1;
+        int64 likes = 2;
+    }
+    repeated UserStat top_users = 1;
+}

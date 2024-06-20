@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: User Service API
-  version: 1.0.1
+  version: 1.0.2
   description: API for user authentication and authorization
 
 paths:
@@ -236,6 +236,60 @@ paths:
         '200':
           description: Like successfully recorded
 
+  /posts/{postId}/stats:
+    get:
+      summary: Get total number of views and likes for a post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved post statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostStat'
+        '404':
+          description: Post not found
+          
+  /posts/top:
+    get:
+      summary: Get top 5 posts by number of likes or views
+      parameters:
+        - name: sortBy
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [likes, views]
+          description: Criterion to sort posts by.
+      responses:
+        '200':
+          description: Successfully retrieved top posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PostStat'
+                  
+  /users/top:
+    get:
+      summary: Get top 3 users with the highest total likes
+      responses:
+        '200':
+          description: Successfully retrieved top users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserStat'
+
 components:
   responses:
     AuthSuccess:
@@ -262,6 +316,32 @@ components:
           type: string
         content:
           type: string
+    PostStat:
+      type: object
+      properties:
+        postId:
+          type: integer
+          format: int64
+          description: ID of the post
+        author:
+          type: string
+          description: Login of the author
+        views:
+          type: integer
+          description: Total number of views
+        likes:
+          type: integer
+          description: Total number of likes
+    UserStat:
+      type: object
+      properties:
+        login:
+          type: string
+          description: Login of the user
+        totalLikes:
+          type: integer
+          description: Total number of likes across all posts
+
 
   securitySchemes:
     bearerAuth:

@@ -40,7 +40,8 @@ services:
     image: yandex/clickhouse-server:latest
     container_name: clickhouse
     ports:
-      - "${STAT_DB_PORT}:${STAT_DB_PORT}" # native TCP interface
+      - "${STAT_DB_HTTP_PORT}:${STAT_DB_HTTP_PORT}" # HTTP interface
+      - "${STAT_DB_TCP_PORT}:${STAT_DB_TCP_PORT}" # native TCP interface
     volumes:
       - ./stat_service/build:/docker-entrypoint-initdb.d
     depends_on:
@@ -49,7 +50,13 @@ services:
   stat_service:
     container_name: stat_service
     restart: unless-stopped
-    command: [ "./main", "--port", "$STAT_SERVICE_PORT" ]
+    command: [ 
+      "./main", 
+      "--liveliness_port", 
+      "$STAT_SERVICE_LIVELINESS_PORT",
+      "--rpc_port",
+      "$STAT_SERVICE_RPC_PORT"
+      ]
     build:
       context: ./stat_service/
       dockerfile: build/Dockerfile
@@ -58,7 +65,8 @@ services:
     depends_on:
       - stat_service_database
     ports:
-      - ${STAT_SERVICE_PORT}:${STAT_SERVICE_PORT}
+      - ${STAT_SERVICE_LIVELINESS_PORT}:${STAT_SERVICE_LIVELINESS_PORT}
+      - ${STAT_SERVICE_RPC_PORT}:${STAT_SERVICE_RPC_PORT}
 
   user_database:
     image: postgres:16.2

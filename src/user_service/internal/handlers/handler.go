@@ -24,6 +24,7 @@ type ServerHandler struct {
 	keys                rsaKeys
 	userSessionLifeTime time.Duration
 	contentService      pb.ContentServiceClient
+	statService         pb.StatServiceClient
 	kafkaProducer       *kafka.Producer
 }
 
