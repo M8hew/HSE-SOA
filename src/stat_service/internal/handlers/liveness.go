@@ -10,7 +10,7 @@ func liveHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("liveliness probe")
 
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "OK")
+	fmt.Fprint(w, "OK")
 }
 
 func StartLivenessHandler(port int) error {

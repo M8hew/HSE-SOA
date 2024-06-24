@@ -81,26 +81,6 @@ func (db dbWrapper) countLikesViews(id uint64) (likes_, views_ int64, err error)
 func (db dbWrapper) getTopPosts(e eventType) ([]post, error) {
 	log.Println("counting top user by post likes/views")
 
-	// var order string = "likes"
-	// if e == views {
-	// 	order = "views"
-	// }
-
-	// query := fmt.Sprintf(`
-	// SELECT
-	//     post_id,
-	//     sumIf(1, event_type = %d) AS likes,
-	//     sumIf(1, event_type = %d) AS views
-	// 	post_author
-	// FROM
-	//     event_table
-	// GROUP BY
-	//     post_id
-	// ORDER BY
-	//     %s DESC
-	// LIMIT
-	//     %d;
-	// `, likes, views, order, topNum)
 	query := fmt.Sprintf(`
 	SELECT
 		post_id,

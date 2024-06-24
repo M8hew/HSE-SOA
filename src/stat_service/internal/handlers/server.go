@@ -11,8 +11,14 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+type databaseWrapper interface {
+	countLikesViews(id uint64) (likes_, views_ int64, err error)
+	getTopPosts(e eventType) ([]post, error)
+	getTopUsers() ([]userInfo, error)
+}
+
 type Server struct {
-	dbWrapper
+	dbWrapper databaseWrapper
 	pb.UnimplementedStatServiceServer
 }
 

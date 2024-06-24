@@ -11,8 +11,16 @@ import (
 	"google.golang.org/grpc"
 )
 
+type DB interface {
+	GetPostObj(id uint) (*PostIntRep, error)
+	CreatePost(post *PostIntRep) error
+	UpdatePost(post *PostIntRep, id uint) error
+	DeletePost(postAuthor int32, id uint) error
+	GetPosts(offset int, batchSize int) ([]PostIntRep, error)
+}
+
 type Server struct {
-	dbWrapper
+	dbWrapper DB
 	pb.UnimplementedContentServiceServer
 }
 
@@ -23,7 +31,7 @@ func NewServer() *Server {
 	}
 
 	log.Println("Db instance successfully created")
-	return &Server{dbWrapper: db}
+	return &Server{dbWrapper: &db}
 }
 
 func (s *Server) ListenAndServe(port string) error {
